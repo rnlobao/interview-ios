@@ -23,7 +23,7 @@ class ListContactsViewModel: ListContactProtocol {
                 if let contacts {
                     completion(contacts, nil)
                 } else {
-                    completion(nil, NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Nenhum contaro"]))
+                    completion(nil, NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Nenhum contato"]))
                 }
             }
         }

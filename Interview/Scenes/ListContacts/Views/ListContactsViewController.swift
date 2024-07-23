@@ -74,9 +74,7 @@ class ListContactsViewController: UIViewController {
             if let error {
                 print(error)
                 
-                let alert = UIAlertController(title: "Ops, ocorreu um erro", message: error.localizedDescription, preferredStyle: .alert)
-                alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-                self.present(alert, animated: true)
+                showAlert(title: "Ops, ocorreu um erro", message: error.localizedDescription)
                 return
             }
             
@@ -84,6 +82,12 @@ class ListContactsViewController: UIViewController {
             self.tableView.reloadData()
             self.activity.stopAnimating()
         }
+    }
+    
+    private func showAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+        self.present(alert, animated: true)
     }
     
     // MARK: - Configure View
@@ -127,17 +131,12 @@ extension ListContactsViewController: UITableViewDataSource, UITableViewDelegate
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let contato = contacts[indexPath.row - 1]
-        
+        let contato = contacts[indexPath.row]
+        tableView.deselectRow(at: indexPath, animated: true)
         guard isLegacy(contact: contato) else {
-            let alert = UIAlertController(title: "Você tocou em", message: "\(contato.name)", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-            self.present(alert, animated: true)
+            showAlert(title: "Você tocou em", message: "\(contato.name)")
             return
         }
-        
-        let alert = UIAlertController(title: "Atenção", message:"Você tocou no contato sorteado", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-        self.present(alert, animated: true)
+        showAlert(title: "Atenção", message: "Você tocou no contato sorteado")
     }
 }

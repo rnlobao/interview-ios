@@ -56,7 +56,7 @@ class ContactCell: UITableViewCell {
     
     public func configureCell(with contact: Contact) {
         fullnameLabel.text = contact.name
-        
+        contactImage.image = UIImage(systemName: "photo")
         if let urlPhoto = URL(string: contact.photoURL) {
             DispatchQueue.global().async { [weak self] in
                 guard let self else { return }
