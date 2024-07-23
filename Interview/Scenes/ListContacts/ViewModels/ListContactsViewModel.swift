@@ -1,26 +1,32 @@
 import Foundation
 
-class ListContactsViewModel {
-    private let service = ListContactService()
+protocol ListContactProtocol {
+    func loadContacts(_ completion: @escaping ([Contact]?, Error?) -> Void)
+}
+
+class ListContactsViewModel: ListContactProtocol {
     
-    private var completion: (([Contact]?, Error?) -> Void)?
-    
-    init() { }
+    private let service: ListContactService
+        
+    init(service: ListContactService) {
+        self.service = service
+    }
     
     func loadContacts(_ completion: @escaping ([Contact]?, Error?) -> Void) {
-        self.completion = completion
-        service.fetchContacts { contacts, err in
-            self.handle(contacts, err)
+        service.fetchContacts { (contacts, error) in
+            DispatchQueue.main.async {
+                if let error {
+                    completion(nil, error)
+                    return
+                }
+                
+                if let contacts {
+                    completion(contacts, nil)
+                } else {
+                    completion(nil, NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Nenhum contaro"]))
+                }
+            }
         }
     }
     
-    private func handle(_ contacts: [Contact]?, _ error: Error?) {
-        if let e = error {
-            completion?(nil, e)
-        }
-        
-        if let contacts = contacts {
-            completion?(contacts, nil)
-        }
-    }
 }

@@ -1,6 +1,8 @@
 import UIKit
 
-class UserIdsLegacy {
+// Aqui ela é Static pois os métodos e propriedades pertencem a struct como um todo e não a uma instância da struct
+
+struct UserIdsLegacy {
     static let legacyIds = [10, 11, 12, 13]
     
     static func isLegacy(id: Int) -> Bool {
@@ -8,15 +10,18 @@ class UserIdsLegacy {
     }
 }
 
-class ListContactsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
-    lazy var activity: UIActivityIndicatorView = {
+class ListContactsViewController: UIViewController {
+    
+    // MARK: - UI Components
+    
+    private lazy var activity: UIActivityIndicatorView = {
         let activity = UIActivityIndicatorView()
         activity.hidesWhenStopped = true
         activity.startAnimating()
         return activity
     }()
     
-    lazy var tableView: UITableView = {
+    private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .plain)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.dataSource = self
@@ -30,6 +35,8 @@ class ListContactsViewController: UIViewController, UITableViewDataSource, UITab
     
     var contacts = [Contact]()
     var viewModel: ListContactsViewModel!
+    
+    // MARK: - Initializers
     
     init() {
         super.init(nibName: nil, bundle: nil)
@@ -48,7 +55,6 @@ class ListContactsViewController: UIViewController, UITableViewDataSource, UITab
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        viewModel = ListContactsViewModel()
         configureViews()
         
         navigationController?.title = "Lista de contatos"
@@ -56,9 +62,39 @@ class ListContactsViewController: UIViewController, UITableViewDataSource, UITab
         loadData()
     }
     
-    func configureViews() {
+    // MARK: - Private methods
+    
+    private func isLegacy(contact: Contact) -> Bool {
+        return UserIdsLegacy.isLegacy(id: contact.id)
+    }
+    
+    private func loadData() {
+        viewModel.loadContacts { [weak self] contacts, error in
+            guard let self else { return }
+            if let error {
+                print(error)
+                
+                let alert = UIAlertController(title: "Ops, ocorreu um erro", message: error.localizedDescription, preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+                self.present(alert, animated: true)
+                return
+            }
+            
+            self.contacts = contacts ?? []
+            self.tableView.reloadData()
+            self.activity.stopAnimating()
+        }
+    }
+    
+    // MARK: - Configure View
+    
+    private func configureViews() {
         view.backgroundColor = .red
-        view.addSubview(tableView)
+        configureViewsHierarchy()
+        configureViewConstraints()
+    }
+    
+    private func configureViewConstraints() {
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.topAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
@@ -67,10 +103,16 @@ class ListContactsViewController: UIViewController, UITableViewDataSource, UITab
         ])
     }
     
-    func isLegacy(contact: Contact) -> Bool {
-        return UserIdsLegacy.isLegacy(id: contact.id)
+    private func configureViewsHierarchy() {
+        view.addSubview(tableView)
     }
     
+}
+
+
+// MARK: - Table View Setups
+
+extension ListContactsViewController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return contacts.count
     }
@@ -79,18 +121,8 @@ class ListContactsViewController: UIViewController, UITableViewDataSource, UITab
         guard let cell = tableView.dequeueReusableCell(withIdentifier: String(describing: ContactCell.self), for: indexPath) as? ContactCell else {
             return UITableViewCell()
         }
-        
         let contact = contacts[indexPath.row]
-        cell.fullnameLabel.text = contact.name
-        
-        if let urlPhoto = URL(string: contact.photoURL) {
-            do {
-                let data = try Data(contentsOf: urlPhoto)
-                let image = UIImage(data: data)
-                cell.contactImage.image = image
-            } catch _ {}
-        }
-        
+        cell.configureCell(with: contact)
         return cell
     }
     
@@ -107,24 +139,5 @@ class ListContactsViewController: UIViewController, UITableViewDataSource, UITab
         let alert = UIAlertController(title: "Atenção", message:"Você tocou no contato sorteado", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
         self.present(alert, animated: true)
-    }
-    
-    func loadData() {
-        viewModel.loadContacts { contacts, error in
-            DispatchQueue.main.async {
-                if let error = error {
-                    print(error)
-                    
-                    let alert = UIAlertController(title: "Ops, ocorreu um erro", message: error.localizedDescription, preferredStyle: .alert)
-                    alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-                    self.present(alert, animated: true)
-                    return
-                }
-                
-                self.contacts = contacts ?? []
-                self.tableView.reloadData()
-                self.activity.stopAnimating()
-            }
-        }
     }
 }
