@@ -1,14 +1,14 @@
 import Foundation
 
-protocol ListContactProtocol {
-    func loadContacts(_ completion: @escaping ([Contact]?, Error?) -> Void)
+protocol ContactServiceProtocol {
+    func fetchContacts(completion: @escaping ([Contact]?, Error?) -> Void)
 }
 
-class ListContactsViewModel: ListContactProtocol {
+class ListContactsViewModel {
     
-    private let service: ListContactService
+    private let service: ContactServiceProtocol
         
-    init(service: ListContactService) {
+    init(service: ContactServiceProtocol) {
         self.service = service
     }
     
