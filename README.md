@@ -1,32 +1,31 @@
-# Quais alterações eu faria no code review do PicPay
+# What changes would I make to the PicPay code review
 
-## Camada de serviço
+## Service Layer
 
-Melhoraria o retorno de erros da aplicação, rotineiramente nos deparamos com erros que não conseguimos debugar o que é, para assegurar melhor legibilidade eu colocaria um completion com erro pra cada possibildiade de dar errado, exemplo quando nao conseguimos transformar a string em URL:
+I would improve the application's error returns. We routinely encounter errors that we can't debug, so to ensure better readability, I would add a completion with an error for each possible failure. For example, when we can't transform the string into a URL:
 
-```
+```swift
 guard let jsonData = data else {
-    completion(nil, NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Nenhum dado retornado"]))
+    completion(nil, NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "No data returned"]))
     return
 }
-
 ```
 
-Adicionei o session por injeção para facilitar os testes.
+I added session injection to facilitate testing.
 
 ## View Model
 
-1) Se fôssemos usar alguma tática de injeção de dependências eu faria o service como uma variável e injetaria através do init, facilitando também os testes unitários posteriormente.
+1. If we were to use any dependency injection tactics, I would make the service a variable and inject it through the init, also facilitating unit testing later.
 
-2) Se fôssemos usar um MVVM-C eu injetaria no coordinator.
+2. If we were to use an MVVM-C, I would inject it into the coordinator.
 
-3) Removeria a variável do completion.
+3. I would remove the completion variable.
 
-4) Não criaria outra função pra handle
+4. I wouldn't create another function to handle it.
 
-5) Trataria o caso do contacts vir nil
+5. I would handle the case where contacts come in nil.
 
-```
+```swift
 func loadContacts(_ completion: @escaping ([Contact]?, Error?) -> Void) {
     service.fetchContacts { [weak self] (contacts, error) in
         guard let self else { return }
@@ -39,88 +38,77 @@ func loadContacts(_ completion: @escaping ([Contact]?, Error?) -> Void) {
         if let contacts {
             completion(contacts, nil)
         } else {
-            completion(nil, NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Nenhum contaro"]))
+            completion(nil, NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "No contacts"]))
         }
     }
 }
 ```
 
-## Células criadas
+## Created Cells
 
-Para a classe de células precisei compreender melhor algumas coisas, como:
+For the cell class, I needed to better understand some things, such as:
 
-1) Como o:
-```
-        imgView.translatesAutoresizingMaskIntoConstraints = false
+1. How `imgView.translatesAutoresizingMaskIntoConstraints = false` works, which creates constraints automatically, trying to understand the context of the view. In other words, when we set the constraints manually, it's necessary to disable this property.
 
-```
+2. `contentMode`
+    - `scaleToFill`: Scales to fill, even if this changes the image dimensions to fill the view.
+    - `scaleAspectFit`: Scales to fill the view while maintaining proportions and not clipping anything.
+    - `scaleAspectFill`: Scales to fill the view, maintaining proportion but clipping some parts of the view.
 
-Funciona, que cria constraints automaticamente tentando entender o contexto da View, ou seja, quando setamos as constraints manualmente é necessário desabilitar essa propriedade.
+3. `clipsToBounds`: Whether content outside the defined view will be clipped or not.
 
-2) contentMode
-- scaleToFill: Escalar para preencher, mesmo que isso altere as dimensões da imagem para preencher a view
-- scaleAspectFit: Escalar para preencher a view mantendo proporções e não podando nada
-- scaleAsectFill: Escalar para preencher a view, mantendo proporção mas poda umas partes da view
+### ACTUAL CHANGES
 
-3) clipsToBounds: o conteúdo que está fora da view definida será cortada sim ou não
+**In this class, I would create a function to configure the hierarchy and another to configure the constraints.**
 
-AS MUDANÇAS DE FATO
+- Add `private` to the vars as they should be open to editing but not modification.
+- Add `numberOfLines = 0` to adapt the label size.
+- Add a single `NSLayoutConstraint.activate` to avoid code repetition.
 
-<strong>Nessa classe eu criaria uma função para configurar a hierarquia e uma para configurar as constraints</strong>
-
-Adicionar private nas vars pois elam devem estar abertas a edição e não modificação.
-
-Adicionar um numberOfLines = 0 para adaptar o tamanho do label.
-
-Adicionar um único "NSLayoutConstraint.activate" para evitar repetição de código.
-
-Agora a parte mais difícil pra mim que é a configuração da Cell, que deve ser responsabilidade dela e pra isso eu criei o sguinte código:
+Now, the most difficult part for me is configuring the Cell, which should be its responsibility. For this, I created the following code:
 
 ![alt text](image-1.png)
 
-Em que a parte azul está numa thread secundária para não atrapalhar a experiência do usuário visualmente enquanto carrega as imagens. A parte vermelha atualiza a thread principal com a imagem já carregada ou uma imagem qualquer.
-
+Where the blue part is on a secondary thread to avoid disrupting the user's visual experience while loading the images. The red part updates the main thread with the already loaded image or a placeholder image.
 
 ## View Controller
 
-1) Transformar a class UserIdsLegacy em struct pois: ela não precisa de herança, nao precisa ser tipo referencial, struct ocupa menos memória (pois é armazenado em stack e não Heap), além de não precisar se preocupar com retain cycles.
+1. Transform the `UserIdsLegacy` class into a struct because it doesn't need inheritance, doesn't need to be a reference type, struct occupies less memory (as it is stored in stack and not heap), besides not needing to worry about retain cycles.
 
-2) Criar extensions para os protocols da tableView
+2. Create extensions for the tableView protocols.
 
-3) Criar uma função para hierarquia e uma para constraints
+3. Create a function for hierarchy and one for constraints.
 
-4) Colocar MARKS no código
+4. Add MARKS in the code.
 
-5) No loadData eu passaria a responsabilidade de lidar com as threads para a viewModel e adicionaria um [weak self] no código
+5. In `loadData`, I would pass the responsibility of handling the threads to the ViewModel and add a `[weak self]` in the code.
 
+# Final project checklist:
 
+### ListContactService
+- [ ] Make it conform to a protocol to facilitate testing.
+- [ ] Add session as a parameter in the init.
+- [ ] Add a completion with an error in case it can't transform the URL.
+- [ ] Add a completion with an error in case there is no data.
 
-# Checklist final do projeto:
+### ListContactsViewModel
+- [ ] Pass the service as a parameter to facilitate testing.
+- [ ] Leave without a handle function and keep everything in one function.
+- [ ] Handle the dispatch management.
+- [ ] Create an error completion in case there are no contacts.
 
-=== ListContactService ===
-- [ ] Fazer ele conformar com um protocolo para facilitar os testes
-- [ ] Adicionaria o session por parâmetro no init
-- [ ] Adicionaria uma completion de erro para caso nao consiga transformar a URL
-- [ ] Adicionaria uma completion de erro para caso nao tenha dados
+### ContactCell
+- [ ] Set `numberOfLines` of `fullnameLabel` to 0.
+- [ ] Separate functions for constraints and hierarchy.
+- [ ] Use a single `NSLayoutConstraint.activate` to activate all constraints at once.
+- [ ] Make visual items private.
+- [ ] Create a public function to access these visual items.
+- [ ] Load the photo asynchronously without being on the main thread to avoid stalling the app.
+- [ ] Add a default photo while images are loading.
 
-=== ListContactsViewModel ===
-- [ ] Passar o service por parâmetro para facilitar testes
-- [ ] Deixaria sem função de handle e manteria tudo em uma função só
-- [ ] Passaria o manage de Dispatch
-- [ ] Criaria um erro completion para caso nao venha contatos
-
-=== ContactCell ===
-- [ ] Passaria o numberOfLines do fullnameLabel para 0
-- [ ] Separaria funções para constraints e para hierarchy
-- [ ] Usaria um NSLayoutConstraint.activate para ativar todas constraints de uma vez
-- [ ] Passaria os itens visuais para private
-- [ ] Criaria uma função pública de acesso a esses itens visuais.
-- [ ] Faria o carregamento da foto assíncrono sem ser na thread principal para evitar engasgar o app
-- [ ] Adicionaria uma foto default enquanto não carregasse as imagens
-
-=== ListContactsViewController ===
-- [ ] Faria o UserIdsLegacy uma Struct.
-- [ ] Comentaria o código
-- [ ] Poderia injetar a viewModel
-- [ ] Criaria uma função Default para showAlert
-- [ ] Acertaria a lógica de clique das células junto com uma "tableView.deselectRow(at: indexPath, animated: true)"
+### ListContactsViewController
+- [ ] Make `UserIdsLegacy` a struct.
+- [ ] Comment the code.
+- [ ] Possibly inject the ViewModel.
+- [ ] Create a default function for `showAlert`.
+- [ ] Correct the cell click logic along with `tableView.deselectRow(at: indexPath, animated: true)`.
