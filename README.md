@@ -95,3 +95,54 @@ Em que a parte azul está numa thread secundária para não atrapalhar a experi�
 
 
 
+# Checklist final do projeto:
+
+ListContactService:
+
+[ ] Fazer ele conformar com um protocolo para facilitar os testes
+
+[ ] Adicionaria o session por parâmetro no init
+
+[ ] Adicionaria uma completion de erro para caso nao consiga transformar a URL
+
+[ ] Adicionaria uma completion de erro para caso nao tenha dados
+
+
+ListContactsViewModel:
+
+[ ] Passar o service por parâmetro para facilitar testes
+
+[ ] Deixaria sem função de handle e manteria tudo em uma função só
+
+[ ] Passaria o manage de Dispatch
+
+[ ] Criaria um erro completion para caso nao venha contatos
+
+
+ContactCell:
+
+[ ] Passaria o numberOfLines do fullnameLabel para 0
+
+[ ] Separaria funções para constraints e para hierarchy
+
+[ ] Usaria um NSLayoutConstraint.activate para ativar todas constraints de uma vez
+
+[ ] Passaria os itens visuais para private
+
+[ ] Criaria uma função pública de acesso a esses itens visuais.
+
+[ ] Faria o carregamento da foto assíncrono sem ser na thread principal para evitar engasgar o app
+
+[ ] Adicionaria uma foto default enquanto não carregasse as imagens
+
+ListContactsViewController:
+
+[ ] Faria o UserIdsLegacy uma Struct.
+
+[ ] Comentaria o código
+
+[ ] Poderia injetar a viewModel
+
+[ ] Criaria uma função Default para showAlert
+
+[ ] Acertaria a lógica de clique das células junto com uma "tableView.deselectRow(at: indexPath, animated: true)"
