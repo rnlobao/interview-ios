@@ -99,7 +99,7 @@ Em que a parte azul está numa thread secundária para não atrapalhar a experi�
 
 ListContactService:
 
-[ ] Fazer ele conformar com um protocolo para facilitar os testes
+- [ ] Fazer ele conformar com um protocolo para facilitar os testes
 
 [ ] Adicionaria o session por parâmetro no init
 
@@ -112,7 +112,7 @@ ListContactsViewModel:
 
 [ ] Passar o service por parâmetro para facilitar testes
 
-[ ] Deixaria sem função de handle e manteria tudo em uma função só
+[] Deixaria sem função de handle e manteria tudo em uma função só
 
 [ ] Passaria o manage de Dispatch
 
